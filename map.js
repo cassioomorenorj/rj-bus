@@ -85,6 +85,15 @@ export async function openMap(container, points, { center, zoom = 15, onSelect }
     L.DomEvent.disableClickPropagation(wrapper);
     L.DomEvent.disableScrollPropagation(wrapper);
     L.DomEvent.on(all, 'click', fit);
+    const expand = L.DomUtil.create('button', 'map-control-button', wrapper);
+    expand.type = 'button';
+    expand.textContent = 'Ampliar mapa';
+    expand.title = 'Alternar mapa em tela ampliada';
+    L.DomEvent.on(expand, 'click', () => {
+      const expanded = container.classList.toggle('map-expanded');
+      expand.textContent = expanded ? 'Reduzir mapa' : 'Ampliar mapa';
+      requestAnimationFrame(() => map.invalidateSize());
+    });
     if (center) {
       const me = L.DomUtil.create('button', 'map-control-button', wrapper);
       me.type = 'button';

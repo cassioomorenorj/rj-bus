@@ -1,6 +1,6 @@
 import { inflateNetwork, normalize, distanceMeters, findRoutes, findStops, readFavorites, freshVehicles } from './core.js?v=6';
 import { GPS_API } from './config.js?v=3';
-import { openMap } from './map.js?v=8';
+import { openMap } from './map.js?v=9';
 
 const tabs = { proximos: 'Próximos', linhas: 'Linhas', pontos: 'Pontos', favoritos: 'Favoritos' };
 const $ = id => document.getElementById(id);
@@ -251,9 +251,13 @@ function renderDetail() {
   if (routeStops.length) content.append(mapButton(routeStops.map(stop => ({ lat: stop.lat, lon: stop.lon, stopId: stop.id, label: stop.name, subtitle: 'Ponto ' + stop.id }))));
   const live = node('section', undefined, 'live-panel');
   live.append(node('h3', 'Ônibus desta linha'));
-  const liveContent = node('div'); liveContent.setAttribute('aria-live', 'polite'); live.append(liveContent); content.append(live);
+  const liveContent = node('div');
+  liveContent.setAttribute('aria-live', 'polite');
+  const liveMapContainer = node('div', undefined, 'live-map-panel');
+  live.append(liveContent, liveMapContainer);
+  content.append(live);
   if (!GPS_API) liveContent.append(note('O GPS está em preparação. A consulta de linhas e pontos já está disponível.'));
-  else refreshGps(item, liveContent, gpsGeneration);
+  else refreshGps(item, liveContent, gpsGeneration, liveMapContainer);
   const details = node('details'); details.append(node('summary', `${item.stopIds.length} pontos cadastrados`));
   details.append(note('Pontos de todos os sentidos e variantes. Esta lista não indica a ordem da viagem.'));
   let shown = 0;
@@ -268,7 +272,45 @@ function renderDetail() {
   content.append(details);
 }
 
-async function refreshGps(route, container, generation) {
+function clearLiveMap(panel) {
+  const map = panel?.rjBusMap;
+  if (map) {
+    activeMaps.delete(map);
+    map.remove();
+    panel.rjBusMap = undefined;
+  }
+  panel?.replaceChildren();
+}
+async function updateLiveMap(panel, vehicles, generation) {
+  if (!panel?.isConnected || generation !== gpsGeneration) return;
+  if (!vehicles.length) { clearLiveMap(panel); return; }
+  const points = vehicles.map(v => ({
+    id: v.id, lat: v.lat, lon: v.lon,
+    label: 'Ônibus ' + v.id,
+    subtitle: 'Posição às ' + new Date(v.timestamp * 1000).toLocaleTimeString('pt-BR', { timeZone: 'America/Sao_Paulo' }),
+    isVehicle: true
+  }));
+  if (panel.rjBusMap) { panel.rjBusMap.rjBusUpdatePoints(points); return; }
+  const heading = note('🟠 Posições reais dos ônibus. Atualiza automaticamente a cada 30 segundos.');
+  const holder = node('div', 'Carregando mapa dos ônibus…', 'map-canvas map-loading');
+  holder.setAttribute('role', 'region');
+  holder.setAttribute('aria-label', 'Mapa ao vivo dos ônibus desta linha');
+  panel.replaceChildren(heading, holder);
+  try {
+    const map = await openMap(holder, points);
+    if (!map) return;
+    if (generation !== gpsGeneration || !panel.isConnected) { map.remove(); return; }
+    holder.classList.remove('map-loading');
+    panel.rjBusMap = map;
+    activeMaps.add(map);
+  } catch {
+    if (panel.isConnected && generation === gpsGeneration) {
+      panel.replaceChildren(note('Não foi possível abrir o mapa ao vivo. A lista de ônibus continua funcionando.'));
+    }
+  }
+}
+
+async function refreshGps(route, container, generation, liveMapContainer) {
   if (document.hidden || generation !== gpsGeneration) return;
   container.replaceChildren(note('Buscando posições recentes…'));
   const controller = new AbortController(); gpsController = controller;
@@ -282,7 +324,10 @@ async function refreshGps(route, container, generation) {
     if (generation !== gpsGeneration || !container.isConnected) return;
     const vehicles = freshVehicles(data.vehicles, route.id);
     container.replaceChildren();
-    if (!vehicles.length) container.append(note('Nenhuma posição recente recebida para esta linha. Isso não confirma que ela esteja fora de operação.'));
+    if (!vehicles.length) {
+      container.append(note('Nenhuma posição recente recebida para esta linha. Isso não confirma que ela esteja fora de operação.'));
+      clearLiveMap(liveMapContainer);
+    }
     else {
       container.append(note(`${vehicles.length} ônibus com posição de até 5 minutos atrás. Atualização automática a cada 30 segundos.`));
       vehicles.forEach(vehicle => {
@@ -296,12 +341,14 @@ async function refreshGps(route, container, generation) {
       });
     }
     container.append(note('Posições informadas pela Prefeitura. Ainda não há previsão de chegada.'));
+    if (vehicles.length) await updateLiveMap(liveMapContainer, vehicles, generation);
   } catch {
     if (generation !== gpsGeneration || !container.isConnected) return;
     container.replaceChildren(note(navigator.onLine ? 'Não foi possível atualizar o GPS. Tentaremos novamente em 30 segundos.' : 'Sem internet. O GPS precisa de uma conexão ativa.'));
+    clearLiveMap(liveMapContainer);
   } finally {
     clearTimeout(timeout);
-    if (generation === gpsGeneration && container.isConnected && !document.hidden) gpsTimer = setTimeout(() => refreshGps(route, container, generation), 30000);
+    if (generation === gpsGeneration && container.isConnected && !document.hidden) gpsTimer = setTimeout(() => refreshGps(route, container, generation, liveMapContainer), 30000);
   }
 }
 

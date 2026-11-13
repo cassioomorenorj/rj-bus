@@ -1,0 +1,32 @@
+{
+  "name": "RJ Bus",
+  "short_name": "RJ Bus",
+  "start_url": "./",
+  "display": "standalone",
+  "background_color": "#f8faf9",
+  "theme_color": "#f8faf9",
+  "icons": [
+    {
+      "src": "icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any"
+    }
+  ],
+  "id": "./",
+  "scope": "./",
+  "lang": "pt-BR",
+  "description": "Aplicativo gratuito e sem anúncios para os ônibus da cidade do Rio de Janeiro."
+}

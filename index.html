@@ -1,0 +1,44 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="theme-color" content="#f8faf9">
+<title>RJ Bus</title>
+<meta name="description" content="RJ Bus: aplicativo gratuito e sem anúncios para os ônibus do Rio de Janeiro. Versão inicial em desenvolvimento.">
+<link rel="icon" href="./icon.svg" type="image/svg+xml">
+<link rel="apple-touch-icon" href="./icon-192.png">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="stylesheet" href="./style.css">
+</head>
+<body>
+<div style="max-width:650px;margin:auto">
+<header>RJ Bus</header>
+<button id="install">Instalar aplicativo</button>
+</div>
+<main>
+<input id="search" class="search" placeholder="Pesquisar linha ou ponto..." maxlength="120" aria-label="Pesquisar linha ou ponto">
+<section class="panel">
+<h2 id="heading">Próximos</h2>
+<div aria-live="polite" id="content" class="empty">Permita o acesso à localização para encontrar pontos próximos.<p>
+<button class="small" id="locate">Usar minha localização</button>
+</p>
+</div>
+<div class="status" id="status" role="status">Protótipo inicial — sem dados de ônibus em tempo real.</div>
+</section>
+</main>
+<nav aria-label="Abas">
+<button data-tab="proximos" class="active">
+<span>⌖</span>Próximos</button>
+<button data-tab="linhas">
+<span>▤</span>Linhas</button>
+<button data-tab="pontos">
+<span>⚑</span>Pontos</button>
+<button data-tab="favoritos">
+<span>☆</span>Favoritos</button>
+</nav>
+<script src="./app.js" defer>
+</script>
+</body>
+</html>
+

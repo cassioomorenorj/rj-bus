@@ -20,7 +20,7 @@ test('unknown paths, arbitrary upstream queries, foreign origins and writes are 
 });
 test('normalizes official protobuf, supplies public-app CORS and caches a shared response', async () => {
   let calls=0, cached;
-  const fetcher=async url=>{calls++;assert.equal(url,'https://dados.mobilidade.rio/gtfs/realtime/onibus/vehicle-positions');return new Response(feed([vehicle('a',now)]));};
+  const fetcher=async (url,options)=>{calls++;assert.equal(options.redirect,'manual');assert.equal(url,'https://dados.mobilidade.rio/gtfs/realtime/onibus/vehicle-positions');return new Response(feed([vehicle('a',now)]));};
   const cache={match:async()=>cached?.clone(),put:async(key,value)=>{cached=value;}};
   const request = new Request('https://rj.test/api/gps/onibus',{headers:{Origin:'https://cassioomorenorj.github.io'}});
   const response=await handleRequest(request,{fetcher,cache});

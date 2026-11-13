@@ -73,8 +73,8 @@ async function readLimited(response) {
   return bytes;
 }
 async function upstream(feed, fetcher) {
-  const response = await fetcher(SOURCES[feed], { signal: AbortSignal.timeout(15000), redirect: 'error', headers: { Accept: 'application/x-protobuf' } });
-  if (!response.ok) throw new Error('Upstream unavailable');
+  const response = await fetcher(SOURCES[feed], { signal: AbortSignal.timeout(15000), redirect: 'manual', headers: { Accept: 'application/x-protobuf' } });
+  if (!response.ok) throw new Error('Upstream HTTP ' + response.status);
   const data = normalizeFeed(await readLimited(response));
   return json({ ...data, feed, source: SOURCES[feed], attribution: 'SMTR / Prefeitura do Rio de Janeiro — CC BY 4.0' }, 200,
     { 'Cache-Control': 'public, max-age=20, s-maxage=20' });
@@ -106,6 +106,9 @@ export async function handleRequest(request, { fetcher = fetch, cache, ctx } = {
       if (ctx?.waitUntil) ctx.waitUntil(save); else await save;
     }
     return respond(response);
-  } catch { return respond(json({ error: 'Fonte de GPS temporariamente indisponível. Tente novamente.' }, 503, { 'Retry-After': '30' })); }
+  } catch (error) {
+    console.warn('GPS source unavailable', feed, String(error?.message || error).slice(0, 200));
+    return respond(json({ error: 'Fonte de GPS temporariamente indisponível. Tente novamente.' }, 503, { 'Retry-After': '30' }));
+  }
 }
 export default { fetch(request, env, ctx) { return handleRequest(request, { ctx }); } };

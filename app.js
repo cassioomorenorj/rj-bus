@@ -270,7 +270,17 @@ $('install').addEventListener('click', async () => {
   const prompt = installPrompt; installPrompt = undefined; $('install').style.display = 'none'; await prompt.prompt();
 });
 window.addEventListener('appinstalled', () => { installPrompt = undefined; $('install').style.display = 'none'; });
-if ('serviceWorker' in navigator) navigator.serviceWorker.register('./sw.js').catch(() => {});
+if ('serviceWorker' in navigator) navigator.serviceWorker.register('./sw.js', { updateViaCache: 'none' })
+  .then(registration => registration.update().catch(() => {}))
+  .catch(() => {});
+if ('serviceWorker' in navigator) {
+  let reloading = false;
+  navigator.serviceWorker.addEventListener('controllerchange', () => {
+    if (reloading) return;
+    reloading = true;
+    window.location.reload();
+  });
+}
 
 async function loadNetwork() {
   render();

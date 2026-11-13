@@ -7,11 +7,12 @@ Aplicativo gratuito e sem anúncios para consultar os ônibus da cidade do Rio d
 ## Disponível
 
 - Busca por número, nome ou destino da linha.
-- Busca de pontos pelo nome da rua ou pelo código do ponto.
+- Busca de pontos pelo nome da rua ou pelo código do ponto, com prioridade para resultados exatos e próximos.
 - Linhas cadastradas em cada ponto.
 - Pontos próximos, calculados no aparelho a partir da localização autorizada.
-- Mapa interativo automático dos pontos próximos após autorizar a localização; mapas sob demanda para um ponto específico e para os pontos cadastrados de uma linha. Os mapas não exibem o trajeto ordenado nem a posição atual dos veículos.
+- Mapa interativo automático dos pontos próximos após autorizar a localização; mapas sob demanda para resultados da pesquisa, favoritos, um ponto específico e pontos de uma linha. Marcadores permitem abrir as linhas de cada ponto. Os mapas não exibem o trajeto ordenado nem posições atuais dos veículos.
 - Favoritos de linhas e pontos, guardados neste navegador.
+- Links compartilháveis diretamente para um ponto ou uma linha, com opção de navegação a pé pelo Google Maps.
 - Instalação como aplicativo em navegadores compatíveis.
 - Consulta da base já carregada sem internet.
 
@@ -29,7 +30,7 @@ GPS preparado com os novos feeds [Ônibus](https://www.arcgis.com/home/item.html
 
 ## Privacidade
 
-Sua localização é usada na memória do aparelho para encontrar pontos próximos e não é enviada ao serviço de GPS. Favoritos ficam no armazenamento do navegador. Ao abrir “Ver no mapa”, você acessa o OpenStreetMap com as coordenadas do ponto ou do ônibus selecionado. O mapa interativo de pontos próximos é carregado ao consultar a localização; nos detalhes, é aberto sob demanda. Seu navegador carrega Leaflet via unpkg e mosaicos do OpenStreetMap, expondo a esses serviços dados técnicos da conexão. Sua posição não é enviada ao servidor do RJ Bus. Não há publicidade ou código de análise de visitantes adicionado ao aplicativo.
+Sua localização é usada na memória do aparelho para encontrar pontos próximos e não é enviada ao serviço de GPS. Ao abrir o mapa automático de próximos, o provedor de mosaicos recebe requisições da área visualizada, que podem revelar a região aproximada. A opção “Como chegar a pé” abre o Google Maps em outro site. Favoritos ficam no armazenamento do navegador. Ao abrir “Ver no mapa”, você acessa o OpenStreetMap com as coordenadas do ponto ou do ônibus selecionado. O mapa interativo de pontos próximos é carregado ao consultar a localização; nos detalhes, é aberto sob demanda. Seu navegador carrega Leaflet via unpkg e mosaicos do OpenStreetMap, expondo a esses serviços dados técnicos da conexão. Sua posição não é enviada ao servidor do RJ Bus. Não há publicidade ou código de análise de visitantes adicionado ao aplicativo.
 
 ## Executar e verificar
 
@@ -49,4 +50,4 @@ npm test
 
 Os testes incluem contagens da versão atual; revise essas expectativas contra o relatório `validation.json` quando a Prefeitura mudar o cadastro. Não aceite automaticamente uma redução inesperada da base.
 
-A publicação do frontend usa GitHub Pages, branch `main`, pasta raiz. O serviço em `server/` é publicado separadamente. Nunca coloque credenciais em `config.js` ou no repositório.
+A publicação do frontend usa GitHub Pages, branch `main`, pasta raiz. O mapa precisa de conexão para carregar a biblioteca Leaflet e os mosaicos do OpenStreetMap; a lista de pontos continua disponível offline. Links diretos de pontos e linhas funcionam offline após instalar e carregar a base. O serviço em `server/` é publicado separadamente. Nunca coloque credenciais em `config.js` ou no repositório.

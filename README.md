@@ -1,45 +1,51 @@
 # RJ Bus
 
-Aplicativo gratuito e sem anúncios para acompanhar os ônibus da cidade do Rio de Janeiro.
+Aplicativo gratuito e sem anúncios para consultar os ônibus da cidade do Rio de Janeiro.
 
-## Estado atual
+**Abrir:** https://cassioomorenorj.github.io/rj-bus/
 
-Esta é a primeira versão da interface. **Ainda não há integração com GPS, linhas, trajetos ou pontos reais.** Nenhum horário de chegada ou veículo mostrado deve ser entendido como informação operacional: esses dados ainda não são apresentados.
+## Disponível
 
-- Interface simples, pensada para celular.
-- Abas Próximos, Linhas, Pontos e Favoritos.
-- Pesquisas favoritas salvas no próprio navegador.
-- Arquivos de instalação como aplicativo web (PWA).
-- Interface disponível sem conexão após a primeira visita.
-- Sem anúncios, cadastro, rastreadores ou dependências pagas.
+- Busca por número, nome ou destino da linha.
+- Busca de pontos pelo nome da rua ou pelo código do ponto.
+- Linhas cadastradas em cada ponto.
+- Pontos próximos, calculados no aparelho a partir da localização autorizada.
+- Favoritos de linhas e pontos, guardados neste navegador.
+- Instalação como aplicativo em navegadores compatíveis.
+- Consulta da base já carregada sem internet.
 
-A localização só é solicitada quando a pessoa toca em **Usar minha localização**. Nesta versão, ela apenas confirma que a permissão está disponível; não envia a posição a um servidor e não consulta pontos.
+A interface é simples, sem anúncios, cadastro ou cobrança. O GPS está preparado em `server/`, mas a integração pública permanece desativada em `config.js` até a liberação do serviço. A versão pública não mostra posições nem previsões de chegada enquanto isso.
 
-## Executar localmente
+## Dados oficiais
 
-Com Python 3 instalado, execute na pasta do projeto:
+Fonte: [GTFS da SMTR / Prefeitura do Rio](https://dados.mobilidade.rio/gtfs/schedule), consultado em 13/11/2026. A transformação inclui 494 cadastros de linhas, 7.493 pontos referenciados por viagens e 52.064 relações entre linha e ponto. Variantes podem compartilhar o mesmo número de linha.
+
+O arquivo `feed_info.txt` declara cobertura de 01/01/2024 a 31/12/2026. `generatedAt` registra a transformação local, não a data de publicação da Prefeitura. A base representa a rede planejada: estar no cadastro não garante operação naquele momento.
+
+As listas de pontos de uma linha reúnem sentidos e variantes; não representam a ordem do trajeto. Distâncias de pontos próximos são em linha reta, não percursos a pé.
+
+GPS preparado com os novos feeds [Ônibus](https://www.arcgis.com/home/item.html?id=997bc16cc4344a5cb0e48ab06cbdfd1f) e [BRT](https://www.arcgis.com/home/item.html?id=8bb196cc02174d25b77437bb2f6443d4) da SMTR. Esses catálogos informam licença CC BY 4.0 e caráter beta. Posições acima de 5 minutos são descartadas, sem estimar horários de chegada. A transformação e a apresentação dos dados são do RJ Bus; não se trata de aplicativo oficial da Prefeitura.
+
+## Privacidade
+
+Sua localização é usada na memória do aparelho para encontrar pontos próximos e não é enviada ao serviço de GPS. Favoritos ficam no armazenamento do navegador. Ao abrir “Ver no mapa”, você acessa o OpenStreetMap com as coordenadas do ponto ou do ônibus selecionado. Não há publicidade ou código de análise de visitantes adicionado ao aplicativo.
+
+## Executar e verificar
+
+Sem dependências no frontend. Sirva esta pasta por HTTP, por exemplo `python3 -m http.server 8000`, e abra `http://localhost:8000`. Geolocalização e instalação exigem HTTPS ou localhost.
 
 ```sh
-python -m http.server 8000
+npm test
 ```
 
-Abra `http://localhost:8000`. A instalação e a localização exigem HTTPS ou localhost e dependem do navegador.
+Para atualizar a base, baixe o GTFS oficial e execute:
 
-## Publicar
+```sh
+python3 scripts/update_gtfs.py /caminho/gtfs.zip /tmp/rj-bus-gtfs
+python3 scripts/pack_data.py /tmp/rj-bus-gtfs data/network.json
+npm test
+```
 
-O projeto é estático e não exige compilação. No GitHub Pages, use a branch `main` e a pasta raiz `/`.
+Os testes incluem contagens da versão atual; revise essas expectativas contra o relatório `validation.json` quando a Prefeitura mudar o cadastro. Não aceite automaticamente uma redução inesperada da base.
 
-## Próximas etapas
-
-1. Validar uma fonte oficial e gratuita de posições dos ônibus.
-2. Integrar linhas, trajetos e pontos de parada.
-3. Mostrar as linhas que passam por cada ponto.
-4. Validar atualização, disponibilidade e qualidade dos dados antes de informar previsões de chegada.
-
-## Arquivos
-
-- `index.html`: página principal.
-- `style.css`: aparência.
-- `app.js`: navegação e favoritos.
-- `manifest.webmanifest` e `icon.svg`: identidade do aplicativo.
-- `sw.js`: cache da interface.
+A publicação do frontend usa GitHub Pages, branch `main`, pasta raiz. O serviço em `server/` é publicado separadamente. Nunca coloque credenciais em `config.js` ou no repositório.

@@ -6,6 +6,22 @@ main{max-width:650px;margin:auto;padding:0 18px 90px}
 .panel{background:white;border:1px solid #e6ebe8;border-radius:15px;margin-top:17px;padding:20px;min-height:260px}
 .muted{color:#75827b;font-size:13px;line-height:1.6}
 .row{padding:13px 0;border-bottom:1px solid #eef0ef;display:flex;justify-content:space-between;gap:10px}
+.row{align-items:center}
+.row-main{display:flex;align-items:center;gap:12px;text-align:left;flex:1;min-width:0;background:transparent;border:0;color:inherit;padding:8px 0}
+.row-name{display:block;overflow-wrap:anywhere;line-height:1.5}
+.row>.small{flex-shrink:0;font-size:12px}
+.route-number{background:#eaf3ee;color:#28533d;border-radius:8px;padding:8px;min-width:48px;text-align:center}
+.block{display:block}
+.tagline{display:block;font-size:12px;font-weight:400;color:#6d7e74;padding-top:3px}
+.primary{background:#356c51;color:white;border:0;border-radius:10px;padding:12px 18px}
+button:disabled{opacity:.65;cursor:wait}
+h3{font-size:16px;line-height:1.5;margin:22px 0 12px}
+.link-button{display:inline-block;text-decoration:none;border:1px solid #dfe7e2;border-radius:9px;background:#f8faf9;padding:7px 11px;color:#416552;margin-left:6px;white-space:nowrap}
+.live-panel{margin:24px 0;border-top:1px solid #eef0ef;border-bottom:1px solid #eef0ef;padding-bottom:10px}
+details{margin:20px 0}summary{cursor:pointer;color:#356c51;padding:10px 0;font-weight:600}
+.notice{font-size:13px;color:#765820;line-height:1.6}
+footer{font-size:12px;text-align:center;padding:20px 0;line-height:1.6;color:#75827b}
+footer a{color:#557563}
 .row:last-child{border:0}
 button{font:inherit;cursor:pointer}
 button.small{border:1px solid #dfe7e2;border-radius:9px;background:#f8faf9;padding:7px 11px;color:#416552}
@@ -15,6 +31,7 @@ nav button.active{color:#356c51;font-weight:700}
 nav span{display:block;font-size:21px;margin-bottom:4px}
 .hidden{display:none}
 .empty{text-align:center;padding:52px 12px;color:#75827b}
+.empty{line-height:1.6}
 .status{font-size:12px;color:#75827b;margin-top:12px}
 h2{font-size:17px;margin:0 0 14px}
 #install{display:none;margin:12px 18px;padding:9px 15px;border:1px solid #cddbd2;background:white;border-radius:10px;color:#356c51}

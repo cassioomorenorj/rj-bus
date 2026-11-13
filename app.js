@@ -146,7 +146,7 @@ function nearbyMap(points, options) {
   queueMicrotask(async () => {
     if (!holder.isConnected) return;
     try {
-      await openMap(holder, points, options);
+      await openMap(holder, points, { ...options, onSelect: stopId => openDetail('stop', stopId) });
       holder.classList.remove('map-loading');
     } catch {
       if (!holder.isConnected) return;
@@ -173,7 +173,7 @@ function render() {
     content.append(note('Encontre os pontos perto de você e veja as linhas que passam por eles.'));
     const locateButton = button(locating ? 'Obtendo localização…' : position ? 'Atualizar minha localização' : 'Usar minha localização', locate, 'primary');
     locateButton.disabled = locating; content.append(locateButton);
-    content.append(note('Sua localização é usada apenas neste aparelho.'));
+    content.append(note('Sua localização não é enviada ao RJ Bus. O mapa carrega imagens da região pelo OpenStreetMap.'));
     if (locationError) content.append(node('p', locationError, 'notice'));
     if (position) {
       const nearest = network.stops.map(stop => ({ stop, distance: distanceMeters(position, stop) })).sort((a, b) => a.distance - b.distance);

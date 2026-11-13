@@ -21,6 +21,12 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: '22'
+      - name: Verificar sintaxe do aplicativo e do mapa
+        run: |
+          node --check app.js
+          node --check map.js
+          node --check core.js
+          node --check sw.js
       - name: Testar aplicativo e base de linhas
         run: npm test
       - name: Instalar dependências do GPS

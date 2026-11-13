@@ -61,3 +61,37 @@ nav{padding-bottom:env(safe-area-inset-bottom)}
 /* Visualização ampliada sem alterar a página original. */
 .map-canvas.map-expanded{position:fixed;inset:8px;width:calc(100vw - 16px);height:calc(100dvh - 16px);max-height:none;margin:0;z-index:1001;border-radius:10px;box-shadow:0 8px 32px #0005}
 .map-expanded .leaflet-control-container{z-index:1002}
+
+/* RJ Bus: marcador de parada com emoji 🚌, sem representar veículo em tempo real. */
+.rjbus-marker-anchor{background:transparent;border:0}
+.rjbus-pin{position:relative;display:flex;align-items:center;justify-content:center;width:39px;height:39px;border:2px solid #fff;border-radius:13px;background:#e7f6ed;box-shadow:0 2px 7px #102f2740;font-size:22px;line-height:1;transition:transform .15s ease}
+.rjbus-pin-stop{border-color:#38815b}
+.rjbus-pin-user{background:#2768dc;border:3px solid #fff;border-radius:50%;box-shadow:0 0 0 2px #2855a7,0 2px 7px #102f2740;color:#fff;font-size:21px}
+.rjbus-pin-vehicle{background:#fff1d8;border-color:#c86c23}
+.rjbus-pin-count{position:absolute;top:-11px;right:-11px;background:#276b4b;border:2px solid #fff;border-radius:100px;min-width:23px;height:23px;padding:0 4px;display:flex;align-items:center;justify-content:center;color:white;font:700 11px system-ui}
+.rjbus-marker-anchor:hover .rjbus-pin{transform:translateY(-2px)}
+.rjbus-marker-anchor:focus-visible .rjbus-pin{outline:3px solid #245cde;outline-offset:2px}
+.map-canvas{height:405px;overflow:hidden}
+.map-controls{display:flex;align-items:center;gap:6px;max-width:none;margin-top:10px}
+.map-control-button{display:grid;place-items:center;padding:0;width:39px;height:39px;min-width:39px;font-size:24px;line-height:1;background:#fff;color:#28533d;border:1px solid #cddbd2;border-radius:10px;box-shadow:0 1px 7px #0002}
+.map-control-button:hover,.map-control-button:focus-visible{background:#edf6ef;outline-offset:2px}
+.map-canvas .leaflet-bar{border:1px solid #cddbd2;border-radius:10px;overflow:hidden;box-shadow:0 1px 7px #0002}
+.map-canvas .leaflet-bar a{height:38px;width:38px;line-height:38px;color:#28533d;font-size:21px}
+.rjbus-map-legend{display:flex;flex-wrap:wrap;gap:3px 9px;max-width:230px;padding:7px 10px;margin:0 0 9px 9px;background:#fffffff2;color:#244235;border:1px solid #d5e3d9;border-radius:9px;box-shadow:0 1px 6px #0002;font:600 11px system-ui}
+.rjbus-map-popup{line-height:1.45}
+.rjbus-map-popup>strong{display:block;margin-bottom:6px;font-size:14px;color:#223d2f}
+.map-popup-subtitle{display:block;font-size:12px;color:#6d7e74;margin-bottom:6px}
+.map-popup-list{max-height:185px;overflow-y:auto;overscroll-behavior:contain;margin-top:9px;border-top:1px solid #e4eae5}
+.map-popup-item{padding:9px 0;border-bottom:1px solid #edf0ed}
+.map-popup-item>strong{display:block;font-size:12px}
+.map-canvas .leaflet-popup-content a{display:block;margin-top:7px;font-size:12px}
+.map-canvas .leaflet-popup-content .map-open-stop{background:#356c51;color:#fff;width:100%;padding:9px;cursor:pointer}
+.map-canvas .leaflet-popup-content{min-width:180px;max-width:250px}
+.map-canvas.map-expanded{overflow:visible}
+@media(max-width:450px){
+  .map-canvas{height:355px}
+  .map-control-button{width:35px;height:35px;min-width:35px;font-size:21px}
+  .map-controls{gap:4px}
+  .rjbus-map-legend{font-size:10px;max-width:170px}
+}
+@media(prefers-reduced-motion:reduce){.rjbus-pin{transition:none}}

@@ -29,6 +29,29 @@ export function findRoutes(routes, query) {
   });
 }
 
+// Prioriza código exato, nome completo e início da rua; depois usa proximidade.
+export function findStops(stops, query, position) {
+  const q = normalize(query.trim());
+  if (q.length < 2) return [];
+  const rank = stop => {
+    const name = normalize(stop.name);
+    if (normalize(stop.id) === q) return 0;
+    if (name === q) return 1;
+    if (name.startsWith(q)) return 2;
+    if (name.split(/\s+/).some(word => word.startsWith(q))) return 3;
+    return 4;
+  };
+  return stops.filter(stop => stop.query.includes(q)).sort((a, b) => {
+    const priority = rank(a) - rank(b);
+    if (priority) return priority;
+    if (position) {
+      const distance = distanceMeters(position, a) - distanceMeters(position, b);
+      if (distance) return distance;
+    }
+    return a.name.localeCompare(b.name, 'pt-BR') || a.id.localeCompare(b.id);
+  });
+}
+
 export function readFavorites(raw) {
   try {
     const values = JSON.parse(raw || '[]');

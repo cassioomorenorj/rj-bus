@@ -87,6 +87,27 @@ function mapButton(points, options = {}) {
   wrapper.append(control, note('Ao abrir, o mapa carrega dados do OpenStreetMap. A lista funciona sem o mapa.'));
   return wrapper;
 }
+// Mostra o mapa próximo à localização assim que os pontos forem encontrados.
+function nearbyMap(points, options) {
+  const wrapper = node('section', undefined, 'map-section');
+  const heading = node('h3', 'Mapa dos pontos próximos');
+  const holder = node('div', 'Carregando mapa…', 'map-canvas map-loading');
+  holder.setAttribute('role', 'region');
+  holder.setAttribute('aria-label', 'Mapa interativo dos pontos próximos');
+  wrapper.append(heading, holder);
+  // Executa após inserir a seção no documento, para o Leaflet medir o tamanho.
+  queueMicrotask(async () => {
+    if (!holder.isConnected) return;
+    try {
+      await openMap(holder, points, options);
+      holder.classList.remove('map-loading');
+    } catch {
+      if (!holder.isConnected) return;
+      holder.replaceWith(note('Não foi possível abrir o mapa. Os pontos estão listados abaixo.'));
+    }
+  });
+  return wrapper;
+}
 function stopGps() { gpsGeneration++; clearTimeout(gpsTimer); gpsController?.abort(); gpsController = undefined; }
 
 function render() {
@@ -113,7 +134,7 @@ function render() {
       if (!nearby.length) empty('Nenhum ponto cadastrado em até 2 km. Você pode pesquisar pela aba Pontos.');
       else {
         content.append(note('Distância em linha reta. O caminho a pé pode ser maior.'));
-        content.append(mapButton([{ lat: position.lat, lon: position.lon, label: 'Você está aqui', isUser: true }, ...nearby.map(({ stop, distance }) => ({ lat: stop.lat, lon: stop.lon, label: stop.name, subtitle: formatDistance(distance) + ' · ' + stop.routeIds.length + ' linhas' }))], { center: position }));
+        content.append(nearbyMap([{ lat: position.lat, lon: position.lon, label: 'Você está aqui', isUser: true }, ...nearby.map(({ stop, distance }) => ({ lat: stop.lat, lon: stop.lon, label: stop.name, subtitle: formatDistance(distance) + ' · ' + stop.routeIds.length + ' linhas' }))], { center: position }));
         nearby.forEach(({ stop, distance }) => content.append(stopRow(stop, distance)));
       }
     }

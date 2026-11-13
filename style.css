@@ -95,3 +95,9 @@ nav{padding-bottom:env(safe-area-inset-bottom)}
   .rjbus-map-legend{font-size:10px;max-width:170px}
 }
 @media(prefers-reduced-motion:reduce){.rjbus-pin{transition:none}}
+
+/* Mapa de ônibus reais: mesmo estilo dos pontos, com marcadores laranja. */
+.live-map-panel{margin:10px 0 20px}
+.live-map-panel .map-canvas{height:360px}
+.live-map-panel .rjbus-pin-vehicle{border-color:#b86c25;background:#fff0d8}
+@media(max-width:450px){.live-map-panel .map-canvas{height:310px}}

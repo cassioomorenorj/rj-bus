@@ -7,6 +7,8 @@ const $ = id => document.getElementById(id);
 const heading = $('heading'), content = $('content'), search = $('search'), status = $('status');
 let tab = 'proximos', selected = null, network, position, locationError = '', locating = false;
 let favorites = [], storageError = false, installPrompt, gpsController, gpsTimer, gpsGeneration = 0, limit = 40;
+let autoLocationPending = false;
+const AUTO_LOCATION_KEY = 'rjbus-auto-location';
 const activeMaps = new Set();
 try { favorites = readFavorites(localStorage.getItem('rjbus-fav')); } catch { /* Session still works. */ }
 
@@ -181,7 +183,7 @@ function render() {
     content.append(note('Encontre os pontos perto de você e veja as linhas que passam por eles.'));
     const locateButton = button(locating ? 'Obtendo localização…' : position ? 'Atualizar minha localização' : 'Usar minha localização', locate, 'primary');
     locateButton.disabled = locating; content.append(locateButton);
-    content.append(note('Sua localização não é enviada ao RJ Bus. O mapa carrega imagens da região pelo OpenStreetMap.'));
+    content.append(note('Depois de autorizar, sua localização será obtida automaticamente nas próximas visitas. Ela não é salva nem enviada ao RJ Bus. O mapa usa o OpenStreetMap.'));
     if (locationError) content.append(node('p', locationError, 'notice'));
     if (position) {
       const nearest = network.stops.map(stop => ({ stop, distance: distanceMeters(position, stop) })).sort((a, b) => a.distance - b.distance);
@@ -303,22 +305,54 @@ async function refreshGps(route, container, generation) {
   }
 }
 
-function locate() {
-  if (!navigator.geolocation) { locationError = 'Localização não disponível neste navegador.'; render(); return; }
+function locate({ automatic = false } = {}) {
+  if (locating) return;
+  if (!navigator.geolocation) {
+    if (!automatic) { locationError = 'Localização não disponível neste navegador.'; render(); }
+    return;
+  }
   locating = true; locationError = ''; render();
   navigator.geolocation.getCurrentPosition(result => {
-    position = { lat: result.coords.latitude, lon: result.coords.longitude }; locating = false;
+    position = { lat: result.coords.latitude, lon: result.coords.longitude };
+    locating = false;
+    // Guarda apenas a preferência de localização automática, nunca coordenadas.
+    try { localStorage.setItem(AUTO_LOCATION_KEY, '1'); } catch { /* Privacidade restrita: sem persistência. */ }
     if (tab === 'proximos' && !selected) render();
   }, error => {
     locating = false;
-    locationError = error.code === 1 ? 'A localização está bloqueada. Libere a permissão no navegador ou pesquise pela aba Pontos.' : 'Não foi possível obter sua localização. Tente novamente ou pesquise pela aba Pontos.';
+    if (error.code === 1) {
+      try { localStorage.removeItem(AUTO_LOCATION_KEY); } catch { /* Sem armazenamento. */ }
+    }
+    locationError = error.code === 1
+      ? 'A localização está bloqueada. Libere a permissão no navegador ou pesquise pela aba Pontos.'
+      : 'Não foi possível obter sua localização. Tente novamente ou pesquise pela aba Pontos.';
     if (tab === 'proximos' && !selected) render();
   }, { enableHighAccuracy: false, timeout: 12000, maximumAge: 60000 });
+}
+
+async function startAutoLocation() {
+  if (autoLocationPending || locating || position || selected || tab !== 'proximos' || !navigator.geolocation) return;
+  autoLocationPending = true;
+  try {
+    // Nunca exibe um pedido de permissão inesperado enquanto estiver em "prompt".
+    if (navigator.permissions?.query) {
+      const permission = await navigator.permissions.query({ name: 'geolocation' });
+      if (permission.state === 'granted' && tab === 'proximos' && !selected) locate({ automatic: true });
+    } else {
+      // Em navegadores sem Permissions API, respeita escolha feita anteriormente.
+      let saved = false;
+      try { saved = localStorage.getItem(AUTO_LOCATION_KEY) === '1'; } catch { /* Sem armazenamento. */ }
+      if (saved && tab === 'proximos' && !selected) locate({ automatic: true });
+    }
+  } catch {
+    // Se não for possível consultar a permissão, o botão continua disponível.
+  } finally { autoLocationPending = false; }
 }
 document.querySelectorAll('nav button').forEach(el => el.addEventListener('click', () => {
   tab = el.dataset.tab; selected = null; search.value = ''; limit = 40;
   window.history.replaceState(null, '', window.location.pathname);
   render();
+  if (tab === 'proximos') startAutoLocation();
 }));
 search.addEventListener('input', () => {
   selected = null; limit = 40;
@@ -361,6 +395,7 @@ async function loadNetwork() {
     const link = selectedFromUrl();
     selected = link && (link.type === 'route' ? network.routeById.has(link.id) : network.stopById.has(link.id)) ? link : null;
     render();
+    startAutoLocation();
   } catch {
     content.replaceChildren(node('div', 'Não foi possível carregar a base. Confira sua conexão e tente novamente.', 'empty'), button('Tentar novamente', loadNetwork));
     status.textContent = 'Base de linhas e pontos indisponível.';

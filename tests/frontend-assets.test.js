@@ -25,8 +25,12 @@ test('módulos do aplicativo e mapa estão incluídos no cache offline', () => {
 
 test('mapas permitem abrir detalhes de uma parada e centralizar a vista', () => {
   assert.ok(map.includes('onSelect(point.stopId)'));
-  assert.ok(map.includes('Enquadrar todos os pontos'));
-  assert.ok(map.includes('Centralizar na sua localização'));
+  assert.ok(map.includes('Mostrar todos os pontos'));
+  assert.ok(map.includes('Centralizar na minha localização'));
+  assert.ok(map.includes('🚌'));
+  assert.ok(map.includes('rjbus-map-legend'));
+  assert.ok(map.includes('groupMapPoints(valid, p => map.project'));
+  assert.ok(map.includes('Aproximar pontos'));
 });
 
 test('endereço compartilhável pode abrir uma linha ou ponto específico', () => {

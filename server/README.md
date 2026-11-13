@@ -6,7 +6,7 @@ Ponte de leitura para os feeds oficiais GTFS-Realtime da SMTR / Prefeitura do Ri
 - `GET /api/gps/brt`: posições do BRT.
 - `GET /`: teste manual da conexão oficial.
 
-Somente esses dois endereços fixos são consultados. Não aceita URL arbitrária, escrita, coordenadas do usuário ou credenciais. CORS permite o aplicativo `https://cassioomorenorj.github.io` e a própria origem do serviço. Respostas válidas têm cache compartilhado por 20 segundos; requisições simultâneas no mesmo processo são agrupadas. Há timeout de 15 segundos e limite de 8 MiB por feed. Falhas retornam 503 sem reapresentar posições antigas como atuais.
+Somente esses dois endereços fixos são consultados. Não aceita URL arbitrária, escrita, coordenadas do usuário ou credenciais. CORS permite o aplicativo `https://cassioomorenorj.github.io` e a própria origem do serviço. Respostas válidas têm cache por 20 segundos (cache nomeado da hospedagem, com alternativa em memória por processo); requisições simultâneas no mesmo processo são agrupadas. Há timeout de 15 segundos e limite de 8 MiB por feed. Falhas retornam 503 sem reapresentar posições antigas como atuais.
 
 O protocolo é decodificado com `gtfs-realtime-bindings` da MobilityData. Posições sem linha, sem timestamp, com coordenadas inválidas, mais de 5 minutos antigas ou mais de 1 minuto no futuro são descartadas. Para veículos duplicados fica o registro mais recente. O cliente também verifica a idade ao exibir. Não são calculadas previsões de chegada.
 

@@ -34,3 +34,11 @@ test('upstream HTTP and malformed protobuf failures return a noncacheable 503', 
     assert.equal(response.status,503);assert.equal(response.headers.get('Cache-Control'),'no-store');
   }
 });
+test('works when the host forbids the default cache and named caching is unavailable', async () => {
+  const previous = globalThis.caches;
+  globalThis.caches = { get default() { throw Error('Forbidden default cache'); }, open: async()=>{throw Error('Cache unavailable');} };
+  try {
+    const response = await handleRequest(new Request('https://restricted.test/api/gps/onibus'), { fetcher:async()=>new Response(feed([vehicle('fallback',now)])) });
+    assert.equal(response.status,200);assert.equal((await response.json()).vehicles[0].id,'fallback');
+  } finally { globalThis.caches = previous; }
+});

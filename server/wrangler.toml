@@ -1,0 +1,10 @@
+# Publicação opcional do GPS no Cloudflare Workers.
+# Antes de publicar: cd server && npm ci --ignore-scripts
+# O comando 'npx wrangler deploy' exige autenticação na conta Cloudflare.
+name = "rj-bus-gps"
+main = "dist/server/index.js"
+compatibility_date = "2026-11-01"
+workers_dev = true
+
+[build]
+command = "npm run build"

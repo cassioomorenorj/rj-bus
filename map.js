@@ -22,6 +22,7 @@ export async function openMap(container, points, { center, zoom = 15 } = {}) {
   if (!points.length) throw new Error('Nenhum ponto para exibir');
   const L = await loadLeaflet();
   if (!container.isConnected) return;
+  container.replaceChildren();
   const map = L.map(container, { scrollWheelZoom: false });
   L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {
     maxZoom: 19, attribution: '&copy; <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener noreferrer">OpenStreetMap</a> contributors'

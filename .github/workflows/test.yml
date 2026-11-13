@@ -1,0 +1,37 @@
+name: Verificar RJ Bus
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  testar:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Baixar projeto
+        uses: actions/checkout@v4
+      - name: Preparar Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Testar aplicativo e base de linhas
+        run: npm test
+      - name: Instalar dependências do GPS
+        working-directory: server
+        run: npm ci --ignore-scripts
+      - name: Testar serviço GPS
+        working-directory: server
+        run: npm test
+      - name: Compilar serviço GPS
+        working-directory: server
+        run: npm run build
+      - name: Validar pacote de publicação
+        working-directory: server
+        run: npm run validate

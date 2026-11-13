@@ -122,8 +122,7 @@ function mapButton(points, options = {}) {
     holder.setAttribute('aria-label', 'Mapa interativo de pontos de ônibus');
     wrapper.append(holder);
     try {
-      const map = const map = await openMap(holder, points, { ...options, onSelect: stopId => openDetail('stop', stopId) });
-      if (map) activeMaps.add(map);
+      const map = await openMap(holder, points, { ...options, onSelect: stopId => openDetail('stop', stopId) });
       if (map) activeMaps.add(map);
       control.remove();
     } catch {
@@ -149,7 +148,8 @@ function nearbyMap(points, options) {
   queueMicrotask(async () => {
     if (!holder.isConnected) return;
     try {
-      await openMap(holder, points, { ...options, onSelect: stopId => openDetail('stop', stopId) });
+      const map = await openMap(holder, points, { ...options, onSelect: stopId => openDetail('stop', stopId) });
+      if (map) activeMaps.add(map);
       holder.classList.remove('map-loading');
     } catch {
       if (!holder.isConnected) return;

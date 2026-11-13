@@ -1,5 +1,6 @@
 import { inflateNetwork, normalize, distanceMeters, findRoutes, readFavorites, freshVehicles } from './core.js?v=3';
 import { GPS_API } from './config.js?v=3';
+import { openMap } from './map.js?v=4';
 
 const tabs = { proximos: 'Próximos', linhas: 'Linhas', pontos: 'Pontos', favoritos: 'Favoritos' };
 const $ = id => document.getElementById(id);
@@ -64,6 +65,28 @@ function addResults(items, row, container = content) {
   items.slice(0, limit).forEach(item => container.append(row(item)));
   if (items.length > limit) container.append(button(`Mostrar mais (${items.length - limit})`, () => { limit += 40; render(); }));
 }
+function mapButton(points, options = {}) {
+  const wrapper = node('section', undefined, 'map-section');
+  const control = button('🗺 Ver mapa interativo', async () => {
+    control.disabled = true;
+    control.textContent = 'Carregando mapa…';
+    const holder = node('div', undefined, 'map-canvas');
+    holder.setAttribute('aria-label', 'Mapa interativo de pontos de ônibus');
+    wrapper.append(holder);
+    try {
+      await openMap(holder, points, options);
+      control.remove();
+    } catch {
+      holder.remove();
+      control.disabled = false;
+      control.textContent = 'Tentar abrir mapa';
+      const warning = node('p', 'Mapa indisponível. A lista de pontos continua funcionando.', 'notice');
+      wrapper.append(warning);
+    }
+  }, 'primary');
+  wrapper.append(control, note('Ao abrir, o mapa carrega dados do OpenStreetMap. A lista funciona sem o mapa.'));
+  return wrapper;
+}
 function stopGps() { gpsGeneration++; clearTimeout(gpsTimer); gpsController?.abort(); gpsController = undefined; }
 
 function render() {
@@ -90,6 +113,7 @@ function render() {
       if (!nearby.length) empty('Nenhum ponto cadastrado em até 2 km. Você pode pesquisar pela aba Pontos.');
       else {
         content.append(note('Distância em linha reta. O caminho a pé pode ser maior.'));
+        content.append(mapButton([{ lat: position.lat, lon: position.lon, label: 'Você está aqui', isUser: true }, ...nearby.map(({ stop, distance }) => ({ lat: stop.lat, lon: stop.lon, label: stop.name, subtitle: formatDistance(distance) + ' · ' + stop.routeIds.length + ' linhas' }))], { center: position }));
         nearby.forEach(({ stop, distance }) => content.append(stopRow(stop, distance)));
       }
     }
@@ -131,12 +155,15 @@ function renderDetail() {
   content.append(node('h3', item.name), favoriteButton(selected.type, item.id, item.name));
   if (selected.type === 'stop') {
     content.append(mapLink(item.lat, item.lon));
+    content.append(mapButton([{ lat: item.lat, lon: item.lon, label: item.name, subtitle: item.routeIds.length + ' linhas cadastradas' }], { center: item }));
     content.append(note('Código do ponto: ' + item.id));
     content.append(node('h3', 'Linhas que passam aqui'));
     findRoutes(item.routeIds.map(id => network.routeById.get(id)), '').forEach(route => content.append(routeRow(route)));
     return;
   }
   if (item.directions.length) content.append(note('Sentidos: ' + [...new Set(item.directions.map(d => d.label))].join(' / ')));
+  const routeStops = item.stopIds.map(id => network.stopById.get(id)).filter(Boolean);
+  if (routeStops.length) content.append(mapButton(routeStops.map(stop => ({ lat: stop.lat, lon: stop.lon, label: stop.name, subtitle: 'Ponto ' + stop.id }))));
   const live = node('section', undefined, 'live-panel');
   live.append(node('h3', 'Ônibus desta linha'));
   const liveContent = node('div'); liveContent.setAttribute('aria-live', 'polite'); live.append(liveContent); content.append(live);

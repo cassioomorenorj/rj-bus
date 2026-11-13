@@ -1,6 +1,6 @@
 import { inflateNetwork, normalize, distanceMeters, findRoutes, findStops, readFavorites, freshVehicles } from './core.js?v=6';
 import { GPS_API } from './config.js?v=3';
-import { openMap } from './map.js?v=6';
+import { openMap } from './map.js?v=8';
 
 const tabs = { proximos: 'Próximos', linhas: 'Linhas', pontos: 'Pontos', favoritos: 'Favoritos' };
 const $ = id => document.getElementById(id);

@@ -10,7 +10,7 @@ Aplicativo gratuito e sem anúncios para consultar os ônibus da cidade do Rio d
 - Busca de pontos pelo nome da rua ou pelo código do ponto, com prioridade para resultados exatos e próximos.
 - Linhas cadastradas em cada ponto.
 - Pontos próximos, calculados no aparelho a partir da localização autorizada. Quando o navegador já concedeu permissão, a posição é obtida automaticamente ao abrir a aba Próximos; na primeira vez, usa-se o botão de autorização.
-- Mapa interativo automático dos pontos próximos após autorizar a localização; mapas sob demanda para resultados da pesquisa, favoritos, um ponto específico e pontos de uma linha. Marcadores permitem abrir as linhas de cada ponto. Os mapas não exibem o trajeto ordenado nem posições atuais dos veículos.
+- Mapa interativo automático dos pontos próximos após autorizar a localização; mapas sob demanda para resultados da pesquisa, favoritos, um ponto específico e pontos de uma linha. Marcadores 🚌 indicam **pontos cadastrados**, não veículos em tempo real; agrupamentos numerados evitam sobreposição de paradas e podem ser abertos para consultar as linhas de cada ponto. A localização do usuário tem marcador azul. Os mapas não exibem o trajeto ordenado nem posições atuais dos veículos.
 - Favoritos de linhas e pontos, guardados neste navegador.
 - Links compartilháveis diretamente para um ponto ou uma linha, com opção de navegação a pé pelo Google Maps.
 - Instalação como aplicativo em navegadores compatíveis.

@@ -1,6 +1,6 @@
 import { inflateNetwork, normalize, distanceMeters, findRoutes, readFavorites, freshVehicles } from './core.js?v=3';
 import { GPS_API } from './config.js?v=3';
-import { openMap } from './map.js?v=4';
+import { openMap } from './map.js?v=6';
 
 const tabs = { proximos: 'Próximos', linhas: 'Linhas', pontos: 'Pontos', favoritos: 'Favoritos' };
 const $ = id => document.getElementById(id);
@@ -44,7 +44,54 @@ function mapLink(lat, lon, label = 'Ver no mapa') {
   link.href = `https://www.openstreetmap.org/?mlat=${lat}&mlon=${lon}#map=18/${lat}/${lon}`;
   link.target = '_blank'; link.rel = 'noopener noreferrer'; return link;
 }
-function openDetail(type, id) { selected = { type, id }; render(); heading.focus(); }
+function selectedFromUrl() {
+  const params = new URLSearchParams(window.location.search);
+  if (params.has('linha')) return { type: 'route', id: params.get('linha') };
+  if (params.has('ponto')) return { type: 'stop', id: params.get('ponto') };
+  return null;
+}
+function detailUrl(type, id) {
+  const url = new URL(window.location.href);
+  url.search = '';
+  url.hash = '';
+  url.searchParams.set(type === 'route' ? 'linha' : 'ponto', id);
+  return url.pathname + url.search;
+}
+function openDetail(type, id) {
+  selected = { type, id };
+  window.history.pushState({ rjBusDetail: true }, '', detailUrl(type, id));
+  render(); heading.focus();
+}
+function closeDetail() {
+  if (window.history.state?.rjBusDetail) window.history.back();
+  else {
+    selected = null;
+    window.history.replaceState(null, '', window.location.pathname);
+    render();
+  }
+}
+function shareButton(type, id) {
+  const control = button('Compartilhar', async () => {
+    const url = new URL(detailUrl(type, id), window.location.origin).href;
+    try {
+      if (navigator.share) await navigator.share({ title: 'RJ Bus', url });
+      else if (navigator.clipboard?.writeText) {
+        await navigator.clipboard.writeText(url);
+        control.textContent = '✓ Link copiado';
+      } else window.prompt('Copie o link do RJ Bus:', url);
+    } catch (error) {
+      if (error?.name !== 'AbortError') control.textContent = 'Não foi possível compartilhar';
+    }
+  });
+  control.setAttribute('aria-label', 'Compartilhar link desta linha ou ponto');
+  return control;
+}
+function walkingLink(lat, lon) {
+  const link = node('a', 'Como chegar a pé', 'small link-button');
+  link.href = 'https://www.google.com/maps/dir/?api=1&destination=' + encodeURIComponent(lat + ',' + lon) + '&travelmode=walking';
+  link.target = '_blank'; link.rel = 'noopener noreferrer';
+  return link;
+}
 function routeRow(route) {
   const row = node('div', undefined, 'row');
   const open = button('', () => openDetail('route', route.id), 'row-main');
@@ -74,7 +121,7 @@ function mapButton(points, options = {}) {
     holder.setAttribute('aria-label', 'Mapa interativo de pontos de ônibus');
     wrapper.append(holder);
     try {
-      await openMap(holder, points, options);
+      await openMap(holder, points, { ...options, onSelect: stopId => openDetail('stop', stopId) });
       control.remove();
     } catch {
       holder.remove();
@@ -134,7 +181,7 @@ function render() {
       if (!nearby.length) empty('Nenhum ponto cadastrado em até 2 km. Você pode pesquisar pela aba Pontos.');
       else {
         content.append(note('Distância em linha reta. O caminho a pé pode ser maior.'));
-        content.append(nearbyMap([{ lat: position.lat, lon: position.lon, label: 'Você está aqui', isUser: true }, ...nearby.map(({ stop, distance }) => ({ lat: stop.lat, lon: stop.lon, label: stop.name, subtitle: formatDistance(distance) + ' · ' + stop.routeIds.length + ' linhas' }))], { center: position }));
+        content.append(nearbyMap([{ lat: position.lat, lon: position.lon, label: 'Você está aqui', isUser: true }, ...nearby.map(({ stop, distance }) => ({ lat: stop.lat, lon: stop.lon, stopId: stop.id, label: stop.name, subtitle: formatDistance(distance) + ' · ' + stop.routeIds.length + ' linhas' }))], { center: position }));
         nearby.forEach(({ stop, distance }) => content.append(stopRow(stop, distance)));
       }
     }
@@ -151,10 +198,17 @@ function render() {
     if (query.length < 2) { empty('Digite pelo menos 2 letras do nome da rua ou do ponto.'); return; }
     const found = network.stops.filter(s => s.query.includes(query));
     content.append(note(`${found.length} pontos encontrados`));
+    if (found.length) {
+      const mapped = found.slice(0, 120);
+      content.append(mapButton(mapped.map(stop => ({ lat: stop.lat, lon: stop.lon, stopId: stop.id, label: stop.name, subtitle: stop.routeIds.length + ' linhas cadastradas' }))));
+      if (found.length > mapped.length) content.append(note('O mapa exibe os primeiros 120 pontos da busca. Refine o nome da rua para encontrar outros.'));
+    }
     if (!found.length) empty('Nenhum ponto encontrado. Tente o nome de uma rua próxima.');
     else addResults(found, stop => stopRow(stop, position ? distanceMeters(position, stop) : undefined));
     return;
   }
+  const savedStops = favorites.filter(f => f.type === 'stop').map(f => network.stopById.get(f.id)).filter(stop => stop && stop.query.includes(query));
+  if (savedStops.length) content.append(mapButton(savedStops.map(stop => ({ lat: stop.lat, lon: stop.lon, stopId: stop.id, label: stop.name, subtitle: stop.routeIds.length + ' linhas cadastradas' }))));
   let count = 0;
   favorites.forEach(f => {
     const item = f.type === 'route' ? network.routeById.get(f.id) : f.type === 'stop' ? network.stopById.get(f.id) : null;
@@ -169,14 +223,14 @@ function render() {
 }
 
 function renderDetail() {
-  content.append(button('← Voltar', () => { selected = null; render(); }));
+  content.append(button('← Voltar', closeDetail));
   const item = selected.type === 'route' ? network.routeById.get(selected.id) : network.stopById.get(selected.id);
   if (!item) { empty('Este cadastro não está disponível na base atual.'); return; }
   heading.textContent = selected.type === 'route' ? 'Linha ' + item.number : 'Ponto de ônibus';
-  content.append(node('h3', item.name), favoriteButton(selected.type, item.id, item.name));
+  content.append(node('h3', item.name), favoriteButton(selected.type, item.id, item.name), shareButton(selected.type, item.id));
   if (selected.type === 'stop') {
-    content.append(mapLink(item.lat, item.lon));
-    content.append(mapButton([{ lat: item.lat, lon: item.lon, label: item.name, subtitle: item.routeIds.length + ' linhas cadastradas' }], { center: item }));
+    content.append(mapLink(item.lat, item.lon), walkingLink(item.lat, item.lon));
+    content.append(mapButton([{ lat: item.lat, lon: item.lon, stopId: item.id, label: item.name, subtitle: item.routeIds.length + ' linhas cadastradas' }], { center: item }));
     content.append(note('Código do ponto: ' + item.id));
     content.append(node('h3', 'Linhas que passam aqui'));
     findRoutes(item.routeIds.map(id => network.routeById.get(id)), '').forEach(route => content.append(routeRow(route)));
@@ -184,7 +238,7 @@ function renderDetail() {
   }
   if (item.directions.length) content.append(note('Sentidos: ' + [...new Set(item.directions.map(d => d.label))].join(' / ')));
   const routeStops = item.stopIds.map(id => network.stopById.get(id)).filter(Boolean);
-  if (routeStops.length) content.append(mapButton(routeStops.map(stop => ({ lat: stop.lat, lon: stop.lon, label: stop.name, subtitle: 'Ponto ' + stop.id }))));
+  if (routeStops.length) content.append(mapButton(routeStops.map(stop => ({ lat: stop.lat, lon: stop.lon, stopId: stop.id, label: stop.name, subtitle: 'Ponto ' + stop.id }))));
   const live = node('section', undefined, 'live-panel');
   live.append(node('h3', 'Ônibus desta linha'));
   const liveContent = node('div'); liveContent.setAttribute('aria-live', 'polite'); live.append(liveContent); content.append(live);
@@ -254,11 +308,19 @@ function locate() {
   }, { enableHighAccuracy: false, timeout: 12000, maximumAge: 60000 });
 }
 document.querySelectorAll('nav button').forEach(el => el.addEventListener('click', () => {
-  tab = el.dataset.tab; selected = null; search.value = ''; limit = 40; render();
+  tab = el.dataset.tab; selected = null; search.value = ''; limit = 40;
+  window.history.replaceState(null, '', window.location.pathname);
+  render();
 }));
 search.addEventListener('input', () => {
   selected = null; limit = 40;
+  window.history.replaceState(null, '', window.location.pathname);
   if (tab === 'proximos' && search.value.trim()) tab = /^\d/.test(search.value.trim()) ? 'linhas' : 'pontos';
+  render();
+});
+window.addEventListener('popstate', () => {
+  const link = selectedFromUrl();
+  selected = link && network && (link.type === 'route' ? network.routeById.has(link.id) : network.stopById.has(link.id)) ? link : null;
   render();
 });
 document.addEventListener('visibilitychange', () => {
@@ -287,7 +349,10 @@ async function loadNetwork() {
   try {
     const response = await fetch('./data/network.json?v=3');
     if (!response.ok) throw new Error('Network unavailable');
-    network = inflateNetwork(await response.json()); render();
+    network = inflateNetwork(await response.json());
+    const link = selectedFromUrl();
+    selected = link && (link.type === 'route' ? network.routeById.has(link.id) : network.stopById.has(link.id)) ? link : null;
+    render();
   } catch {
     content.replaceChildren(node('div', 'Não foi possível carregar a base. Confira sua conexão e tente novamente.', 'empty'), button('Tentar novamente', loadNetwork));
     status.textContent = 'Base de linhas e pontos indisponível.';

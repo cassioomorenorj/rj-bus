@@ -16,7 +16,7 @@ Aplicativo gratuito e sem anúncios para consultar os ônibus da cidade do Rio d
 - Instalação como aplicativo em navegadores compatíveis.
 - Consulta da base já carregada sem internet.
 
-A interface é simples, sem anúncios, cadastro ou cobrança. O GPS está preparado em `server/`, mas a integração pública permanece desativada em `config.js` até a liberação do serviço. A versão pública não mostra posições nem previsões de chegada enquanto isso.
+A interface é simples, sem anúncios, cadastro ou cobrança. O GPS está preparado em `server/`, mas a integração pública permanece desativada em `config.js` até a publicação e a verificação do serviço. Quando o serviço estiver ativo, abrir os detalhes de uma linha mostrará os veículos dessa linha no mapa, com atualização automática a cada 30 segundos, somente para posições recentes de até 5 minutos. Não são calculadas previsões de chegada. Sem serviço validado, não são exibidos ônibus supostamente ao vivo.
 
 ## Dados oficiais
 

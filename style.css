@@ -57,3 +57,7 @@ nav{padding-bottom:env(safe-area-inset-bottom)}
 .map-canvas .leaflet-popup-content{min-width:150px}
 .map-canvas:focus-within{outline-color:#356c51}
 @media(max-width:450px){.map-controls{max-width:112px}.map-control-button{padding:6px;font-size:11px}}
+
+/* Visualização ampliada sem alterar a página original. */
+.map-canvas.map-expanded{position:fixed;inset:8px;width:calc(100vw - 16px);height:calc(100dvh - 16px);max-height:none;margin:0;z-index:1001;border-radius:10px;box-shadow:0 8px 32px #0005}
+.map-expanded .leaflet-control-container{z-index:1002}

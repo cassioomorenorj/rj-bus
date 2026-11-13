@@ -1,5 +1,5 @@
-// Mapa opcional: carrega Leaflet apenas quando a pessoa abre o mapa.
-// O navegador consulta os mosaicos do OpenStreetMap somente após o clique.
+// Mapa interativo carregado quando necessário. Sem publicidade ou rastreamento no RJ Bus.
+// Leaflet e mapas de terceiros exigem internet para a primeira abertura.
 let leafletPromise;
 function loadLeaflet() {
   if (globalThis.L) return Promise.resolve(globalThis.L);
@@ -11,52 +11,90 @@ function loadLeaflet() {
       document.head.append(css);
       const script = document.createElement('script');
       script.src = 'https://unpkg.com/leaflet@1.9.4/dist/leaflet.js';
-      script.onload = () => globalThis.L ? resolve(globalThis.L) : reject(new Error('Leaflet indisponível'));
+      script.onload = () => globalThis.L ? resolve(globalThis.L) : reject(new Error('Biblioteca de mapa indisponível'));
       script.onerror = () => reject(new Error('Não foi possível carregar o mapa'));
       document.head.append(script);
     }).catch(error => { leafletPromise = undefined; throw error; });
   }
   return leafletPromise;
 }
-export async function openMap(container, points, { center, zoom = 15 } = {}) {
+
+// Pontos são da base GTFS e não representam a ordem real de viagem.
+export async function openMap(container, points, { center, zoom = 15, onSelect } = {}) {
   if (!points.length) throw new Error('Nenhum ponto para exibir');
   const L = await loadLeaflet();
-  if (!container.isConnected) return;
+  if (!container.isConnected) return null;
   container.replaceChildren();
-  const map = L.map(container, { scrollWheelZoom: false });
+  const map = L.map(container, { scrollWheelZoom: false, preferCanvas: true });
   L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {
-    maxZoom: 19, attribution: '&copy; <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener noreferrer">OpenStreetMap</a> contributors'
+    maxZoom: 19,
+    attribution: '&copy; <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener noreferrer">OpenStreetMap</a> contributors'
   }).addTo(map);
   const bounds = [];
   for (const point of points) {
     if (!Number.isFinite(point.lat) || !Number.isFinite(point.lon)) continue;
+    const isUser = !!point.isUser;
+    const isVehicle = !!point.isVehicle;
     const marker = L.circleMarker([point.lat, point.lon], {
-      radius: point.isUser ? 9 : 6,
-      color: point.isUser ? '#2355aa' : '#356c51',
-      fillColor: point.isUser ? '#4285f4' : '#56a87b',
-      fillOpacity: .85, weight: 2
+      radius: isUser ? 10 : isVehicle ? 8 : 6,
+      color: isUser ? '#194b99' : isVehicle ? '#ae622c' : '#356c51',
+      fillColor: isUser ? '#4285f4' : isVehicle ? '#ee9d57' : '#56a87b',
+      fillOpacity: .9, weight: 2
     }).addTo(map);
-    // Leaflet escapes text via DOM textContent, avoiding HTML injection from GTFS names.
+    // Dados oficiais são colocados como texto, nunca como HTML não confiável.
     const popup = document.createElement('div');
-    const name = document.createElement('strong');
-    name.textContent = point.label;
-    popup.append(name);
+    const title = document.createElement('strong');
+    title.textContent = point.label || 'Ponto de ônibus';
+    popup.append(title);
     if (point.subtitle) {
       const detail = document.createElement('div');
       detail.textContent = point.subtitle;
       popup.append(detail);
     }
+    if (point.stopId && typeof onSelect === 'function') {
+      const control = document.createElement('button');
+      control.type = 'button';
+      control.className = 'map-open-stop';
+      control.textContent = 'Ver linhas deste ponto';
+      control.addEventListener('click', () => onSelect(point.stopId));
+      popup.append(control);
+    }
     const link = document.createElement('a');
     link.href = 'https://www.openstreetmap.org/?mlat=' + point.lat + '&mlon=' + point.lon + '#map=18/' + point.lat + '/' + point.lon;
-    link.target = '_blank'; link.rel = 'noopener noreferrer';
+    link.target = '_blank';
+    link.rel = 'noopener noreferrer';
     link.textContent = 'Abrir no OpenStreetMap';
     popup.append(link);
     marker.bindPopup(popup);
     bounds.push([point.lat, point.lon]);
   }
+  if (!bounds.length) { map.remove(); throw new Error('Coordenadas inválidas'); }
+  const fit = () => {
+    if (bounds.length === 1) map.setView(bounds[0], zoom);
+    else map.fitBounds(bounds, { padding: [24, 24], maxZoom: 16 });
+  };
   if (center) map.setView([center.lat, center.lon], zoom);
-  else if (bounds.length === 1) map.setView(bounds[0], zoom);
-  else map.fitBounds(bounds, { padding: [22, 22], maxZoom: 16 });
-  requestAnimationFrame(() => map.invalidateSize());
+  else fit();
+  const controls = L.control({ position: 'topright' });
+  controls.onAdd = () => {
+    const wrapper = L.DomUtil.create('div', 'map-controls');
+    const all = L.DomUtil.create('button', 'map-control-button', wrapper);
+    all.type = 'button';
+    all.textContent = 'Ver todos';
+    all.title = 'Enquadrar todos os pontos';
+    L.DomEvent.disableClickPropagation(wrapper);
+    L.DomEvent.disableScrollPropagation(wrapper);
+    L.DomEvent.on(all, 'click', fit);
+    if (center) {
+      const me = L.DomUtil.create('button', 'map-control-button', wrapper);
+      me.type = 'button';
+      me.textContent = 'Minha posição';
+      me.title = 'Centralizar na sua localização';
+      L.DomEvent.on(me, 'click', () => map.setView([center.lat, center.lon], 16));
+    }
+    return wrapper;
+  };
+  controls.addTo(map);
+  requestAnimationFrame(() => { if (container.isConnected) map.invalidateSize(); });
   return map;
 }

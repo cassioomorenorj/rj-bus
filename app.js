@@ -7,6 +7,7 @@ const $ = id => document.getElementById(id);
 const heading = $('heading'), content = $('content'), search = $('search'), status = $('status');
 let tab = 'proximos', selected = null, network, position, locationError = '', locating = false;
 let favorites = [], storageError = false, installPrompt, gpsController, gpsTimer, gpsGeneration = 0, limit = 40;
+const activeMaps = new Set();
 try { favorites = readFavorites(localStorage.getItem('rjbus-fav')); } catch { /* Session still works. */ }
 
 function node(tag, text, className) {
@@ -121,7 +122,8 @@ function mapButton(points, options = {}) {
     holder.setAttribute('aria-label', 'Mapa interativo de pontos de ônibus');
     wrapper.append(holder);
     try {
-      await openMap(holder, points, { ...options, onSelect: stopId => openDetail('stop', stopId) });
+      const map = await openMap(holder, points, { ...options, onSelect: stopId => openDetail('stop', stopId) });
+      if (map) activeMaps.add(map);
       control.remove();
     } catch {
       holder.remove();
@@ -156,9 +158,14 @@ function nearbyMap(points, options) {
   return wrapper;
 }
 function stopGps() { gpsGeneration++; clearTimeout(gpsTimer); gpsController?.abort(); gpsController = undefined; }
+function disposeMaps() {
+  for (const map of activeMaps) map.remove();
+  activeMaps.clear();
+}
 
 function render() {
   stopGps();
+  disposeMaps();
   heading.textContent = tabs[tab]; content.replaceChildren(); content.className = '';
   document.querySelectorAll('nav button').forEach(el => {
     const active = el.dataset.tab === tab; el.classList.toggle('active', active);

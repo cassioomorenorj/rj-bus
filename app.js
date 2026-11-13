@@ -122,7 +122,8 @@ function mapButton(points, options = {}) {
     holder.setAttribute('aria-label', 'Mapa interativo de pontos de ônibus');
     wrapper.append(holder);
     try {
-      const map = await openMap(holder, points, { ...options, onSelect: stopId => openDetail('stop', stopId) });
+      const map = const map = await openMap(holder, points, { ...options, onSelect: stopId => openDetail('stop', stopId) });
+      if (map) activeMaps.add(map);
       if (map) activeMaps.add(map);
       control.remove();
     } catch {

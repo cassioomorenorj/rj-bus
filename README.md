@@ -10,6 +10,7 @@ Aplicativo gratuito e sem anúncios para consultar os ônibus da cidade do Rio d
 - Busca de pontos pelo nome da rua ou pelo código do ponto.
 - Linhas cadastradas em cada ponto.
 - Pontos próximos, calculados no aparelho a partir da localização autorizada.
+- Mapas interativos sob demanda para pontos próximos, um ponto específico e pontos de uma linha. Os mapas exibem cadastros, não o trajeto ordenado nem a posição atual dos veículos.
 - Favoritos de linhas e pontos, guardados neste navegador.
 - Instalação como aplicativo em navegadores compatíveis.
 - Consulta da base já carregada sem internet.
@@ -28,7 +29,7 @@ GPS preparado com os novos feeds [Ônibus](https://www.arcgis.com/home/item.html
 
 ## Privacidade
 
-Sua localização é usada na memória do aparelho para encontrar pontos próximos e não é enviada ao serviço de GPS. Favoritos ficam no armazenamento do navegador. Ao abrir “Ver no mapa”, você acessa o OpenStreetMap com as coordenadas do ponto ou do ônibus selecionado. Não há publicidade ou código de análise de visitantes adicionado ao aplicativo.
+Sua localização é usada na memória do aparelho para encontrar pontos próximos e não é enviada ao serviço de GPS. Favoritos ficam no armazenamento do navegador. Ao abrir “Ver no mapa”, você acessa o OpenStreetMap com as coordenadas do ponto ou do ônibus selecionado. O mapa interativo é opcional: ao clicar para abri-lo, seu navegador carrega Leaflet via unpkg e mosaicos do OpenStreetMap, expondo a esses serviços dados técnicos da conexão. Sua posição não é enviada ao servidor do RJ Bus. Não há publicidade ou código de análise de visitantes adicionado ao aplicativo.
 
 ## Executar e verificar
 

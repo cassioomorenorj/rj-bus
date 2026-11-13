@@ -1,5 +1,5 @@
-import { inflateNetwork, normalize, distanceMeters, findRoutes, readFavorites, freshVehicles } from './core.js';
-import { GPS_API } from './config.js';
+import { inflateNetwork, normalize, distanceMeters, findRoutes, readFavorites, freshVehicles } from './core.js?v=3';
+import { GPS_API } from './config.js?v=3';
 
 const tabs = { proximos: 'Próximos', linhas: 'Linhas', pontos: 'Pontos', favoritos: 'Favoritos' };
 const $ = id => document.getElementById(id);
@@ -227,7 +227,7 @@ if ('serviceWorker' in navigator) navigator.serviceWorker.register('./sw.js').ca
 async function loadNetwork() {
   render();
   try {
-    const response = await fetch('./data/network.json');
+    const response = await fetch('./data/network.json?v=3');
     if (!response.ok) throw new Error('Network unavailable');
     network = inflateNetwork(await response.json()); render();
   } catch {

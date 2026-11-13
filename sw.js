@@ -1,7 +1,7 @@
 'use strict';
 
-const CACHE = 'rjbus-shell-v3';
-const FILES = ['./', './index.html', './style.css', './app.js', './core.js', './config.js', './data/network.json', './manifest.webmanifest', './icon.svg', './icon-192.png', './icon-512.png'];
+const CACHE = 'rjbus-shell-v4';
+const FILES = ['./', './index.html', './style.css?v=3', './app.js?v=3', './core.js?v=3', './config.js?v=3', './data/network.json?v=3', './manifest.webmanifest', './icon.svg', './icon-192.png', './icon-512.png'];
 
 self.addEventListener('install', event => {
   event.waitUntil(caches.open(CACHE).then(cache => cache.addAll(FILES)).then(() => self.skipWaiting()));

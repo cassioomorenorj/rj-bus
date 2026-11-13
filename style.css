@@ -49,3 +49,11 @@ nav{padding-bottom:env(safe-area-inset-bottom)}
 @media(max-width:450px){.map-canvas{height:300px}}
 
 .map-loading{display:flex;align-items:center;justify-content:center;color:#64756a;font-size:14px}
+
+/* Controles leves dentro do mapa e ação para ver o ponto. */
+.map-controls{display:grid;gap:5px;max-width:135px}
+.map-control-button{border:1px solid #bfd0c5;border-radius:7px;background:white;padding:8px 10px;color:#28533d;font:600 12px system-ui;cursor:pointer;box-shadow:0 1px 5px #0002}
+.map-open-stop{display:block;width:100%;margin-top:8px;padding:7px;border:0;border-radius:6px;background:#356c51;color:#fff;font:600 12px system-ui;cursor:pointer}
+.map-canvas .leaflet-popup-content{min-width:150px}
+.map-canvas:focus-within{outline-color:#356c51}
+@media(max-width:450px){.map-controls{max-width:112px}.map-control-button{padding:6px;font-size:11px}}

@@ -96,8 +96,8 @@ function createPopup(group, onSelect, zoomIn) {
     if (point.subtitle) addText(root, 'div', point.subtitle, 'map-popup-subtitle');
     if (!point.isUser) addStopActions(root, point, onSelect);
   } else {
-    addText(root, 'strong', group.items.length + ' pontos nesta região');
-    addText(root, 'div', 'Amplie para separar os pontos ou escolha abaixo.', 'map-popup-subtitle');
+    addText(root, 'strong', group.items.length + (group.kind === 'vehicle' ? ' ônibus nesta região' : ' pontos nesta região'));
+    addText(root, 'div', 'Amplie para separar os marcadores ou escolha abaixo.', 'map-popup-subtitle');
     const zoom = addText(root, 'button', 'Aproximar pontos', 'map-open-stop');
     zoom.type = 'button';
     zoom.addEventListener('click', zoomIn);
@@ -106,7 +106,7 @@ function createPopup(group, onSelect, zoomIn) {
     for (const point of group.items) {
       const row = document.createElement('div');
       row.className = 'map-popup-item';
-      addText(row, 'strong', '🚌 ' + (point.label || 'Ponto de ônibus'));
+      addText(row, 'strong', (group.kind === 'vehicle' ? '🚌 ' : '📍 ') + (point.label || (group.kind === 'vehicle' ? 'Ônibus' : 'Ponto de ônibus')));
       if (point.subtitle) addText(row, 'span', point.subtitle, 'map-popup-subtitle');
       addStopActions(row, point, onSelect);
       items.append(row);
@@ -128,8 +128,9 @@ export async function openMap(container, points, { center, zoom = 15, onSelect }
     attribution: '&copy; <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener noreferrer">OpenStreetMap</a> contributors'
   }).addTo(map);
 
-  const valid = points.filter(p => Number.isFinite(p.lat) && Number.isFinite(p.lon) &&
+  const onlyValid = data => data.filter(p => Number.isFinite(p.lat) && Number.isFinite(p.lon) &&
     Math.abs(p.lat) <= 90 && Math.abs(p.lon) <= 180);
+  let valid = onlyValid(points);
   if (!valid.length) { map.remove(); throw new Error('Coordenadas inválidas'); }
 
   const bounds = L.latLngBounds(valid.map(point => [point.lat, point.lon]));
@@ -161,6 +162,11 @@ export async function openMap(container, points, { center, zoom = 15, onSelect }
   };
   draw();
   map.on('zoomend', draw);
+  // Atualiza marcadores de veículos sem recriar o mapa nem alterar zoom/posição.
+  map.rjBusUpdatePoints = newPoints => {
+    valid = onlyValid(newPoints);
+    draw();
+  };
 
   // Controles compactos deixam mais espaço para ruas e marcadores.
   L.control.zoom({ position: 'topleft', zoomInTitle: 'Aproximar mapa', zoomOutTitle: 'Afastar mapa' }).addTo(map);
